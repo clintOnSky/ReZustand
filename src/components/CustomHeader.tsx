@@ -1,15 +1,21 @@
 import { View, Text, StyleSheet, Image, TouchableOpacity } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
-import React from "react";
+import React, { useRef } from "react";
 import { Ionicons } from "@expo/vector-icons";
 import { COLORS } from "constants/Colors";
 import SearchBar from "@comp/SearchBar";
+import BottomSheet from "@comp/BottomSheet";
+import type { BottomSheetModal } from "@gorhom/bottom-sheet";
 
 const CustomHeader = () => {
+  const bottomSheetRef = useRef<BottomSheetModal>(null);
+
+  const openModal = () => bottomSheetRef?.current?.present();
   return (
     <SafeAreaView style={styles.root}>
+      <BottomSheet ref={bottomSheetRef} />
       <View style={styles.container}>
-        <TouchableOpacity style={styles.headerLeft}>
+        <TouchableOpacity style={styles.headerLeft} onPress={openModal}>
           <Image
             source={require("@img/bike.png")}
             style={styles.image}
@@ -18,12 +24,12 @@ const CustomHeader = () => {
         </TouchableOpacity>
         <View style={styles.titleContainer}>
           <Text style={styles.title}>Delivery • Now</Text>
-          <TouchableOpacity style={styles.locationView}>
+          <TouchableOpacity style={styles.locationView} onPress={openModal}>
             <Text style={styles.location}>Edo, Benin City</Text>
             <Ionicons name="chevron-down" size={20} color={COLORS.primary} />
           </TouchableOpacity>
         </View>
-        <TouchableOpacity style={styles.headerRight}>
+        <TouchableOpacity style={styles.headerRight} onPress={() => {}}>
           <Ionicons name="person-outline" size={20} color={COLORS.primary} />
         </TouchableOpacity>
       </View>

@@ -1,7 +1,9 @@
 import CustomHeader from "@comp/CustomHeader";
+import { Ionicons } from "@expo/vector-icons";
 import { BottomSheetModalProvider } from "@gorhom/bottom-sheet";
-import { Stack } from "expo-router";
-import { useColorScheme } from "react-native";
+import { COLORS } from "constants/Colors";
+import { Stack, router } from "expo-router";
+import { TouchableOpacity } from "react-native";
 
 export const unstable_settings = {
   // Ensure that reloading on `/modal` keeps a back button present.
@@ -9,12 +11,6 @@ export const unstable_settings = {
 };
 
 export default function RootLayout() {
-  // const colorScheme = useColorScheme();
-  // console.log(
-  //   "🚀 ~ file: _layout.tsx:14 ~ RootLayout ~ colorScheme:",
-  //   colorScheme
-  // );
-
   return (
     <BottomSheetModalProvider>
       <Stack>
@@ -22,6 +18,26 @@ export default function RootLayout() {
           name="index"
           options={{
             header: () => <CustomHeader />,
+          }}
+        />
+        <Stack.Screen
+          name="(modal)/filter"
+          options={{
+            headerTitle: "Filter",
+            headerShadowVisible: false,
+            headerTitleAlign: "center",
+            headerLeft: () => (
+              <TouchableOpacity onPress={() => router.back()}>
+                <Ionicons
+                  name="close-outline"
+                  size={28}
+                  color={COLORS.primary}
+                />
+              </TouchableOpacity>
+            ),
+            headerStyle: {
+              backgroundColor: COLORS.lightGrey,
+            },
           }}
         />
       </Stack>
