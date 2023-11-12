@@ -1,3 +1,5 @@
+import CustomHeader from "@comp/CustomHeader";
+import { BottomSheetModalProvider } from "@gorhom/bottom-sheet";
 import { Stack } from "expo-router";
 import { useColorScheme } from "react-native";
 
@@ -14,8 +16,15 @@ export default function RootLayout() {
   // );
 
   return (
-    <Stack>
-      <Stack.Screen name="index" options={{}} />
-    </Stack>
+    <BottomSheetModalProvider>
+      <Stack>
+        <Stack.Screen
+          name="index"
+          options={{
+            header: () => <CustomHeader />,
+          }}
+        />
+      </Stack>
+    </BottomSheetModalProvider>
   );
 }
