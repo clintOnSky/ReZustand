@@ -1,12 +1,18 @@
 {
   "extends": "expo/tsconfig.base",
   "compilerOptions": {
-    // "strict": true,
+    "strict": true,
     "baseUrl": ".",
     "paths": {
       "@comp/*": ["src/components/*"],
       "@img/*": ["assets/images/*"]
     }
   },
-  "include": ["**/*.ts", "**/*.tsx", ".expo/types/**/*.ts", "expo-env.d.ts"]
+  "include": [
+    "**/*.ts",
+    "**/*.tsx",
+    ".expo/types/**/*.ts",
+    "expo-env.d.ts",
+    "src/app/(modal)/filter.jsx"
+  ]
 }

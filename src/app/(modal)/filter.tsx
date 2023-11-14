@@ -5,11 +5,13 @@ import {
   TouchableOpacity,
   View,
   ListRenderItem,
+  Button,
 } from "react-native";
-import React from "react";
+import React, { useState } from "react";
 import { COLORS } from "constants/Colors";
 import categories from "assets/data/filter.json";
 import { Ionicons } from "@expo/vector-icons";
+import BouncyCheckbox from "react-native-bouncy-checkbox";
 
 interface Categories {
   name: string;
@@ -30,12 +32,25 @@ const ItemBox = () => {
     { title: "Offers", icon: "pricetag-outline" },
     { title: "Dietary", icon: "nutrition-outline" },
   ];
+
   return (
     <>
-      <View style={styles.itemContainer}>
+      <View style={styles.itemView}>
         {itemData?.map((item, index) => (
           <TouchableOpacity style={styles.itemBtn} key={index.toString()}>
-            <Ionicons name={item.icon} size={20} color={COLORS.medium} />
+            <Ionicons
+              name={
+                index === 0
+                  ? "swap-vertical"
+                  : index === 1
+                  ? "fast-food-outline"
+                  : index === 2
+                  ? "pricetag-outline"
+                  : "nutrition-outline"
+              }
+              size={20}
+              color={COLORS.medium}
+            />
             <View style={styles.itemTitleView}>
               <Text style={styles.itemTitle}>{item.title}</Text>
               {item.subtitle && (
@@ -52,19 +67,58 @@ const ItemBox = () => {
 };
 
 const Filter = () => {
+  const [items, setItems] = useState<Categories[]>(categories);
+
+  const toggleCheck = (name: string) => {
+    setItems((prevItems) =>
+      prevItems?.map((item) =>
+        item.name === name ? { ...item, checked: !item.checked } : item
+      )
+    );
+  };
+
+  const handleClearAll = () => {
+    setItems((prevItems) =>
+      prevItems?.map((item) => {
+        item.checked = false;
+        return item;
+      })
+    );
+  };
+
   const renderItem: ListRenderItem<Categories> = ({ item }) => (
-    <View>
-      <Text>{item.name}</Text>
+    <View style={styles.listItem}>
+      <Text style={styles.listItemText}>
+        {item.name} ({item.count})
+      </Text>
+      <BouncyCheckbox
+        fillColor={COLORS.primary}
+        unfillColor={COLORS.light}
+        disableBuiltInState
+        iconStyle={{
+          borderRadius: 2,
+          borderColor: COLORS.primary,
+          borderWidth: 2,
+        }}
+        innerIconStyle={{
+          borderRadius: 2,
+        }}
+        isChecked={item.checked}
+        onPress={() => {
+          toggleCheck(item.name);
+        }}
+        disableText
+      />
     </View>
   );
   return (
     <View style={styles.container}>
+      <Button title="Clear All" onPress={handleClearAll} />
       <FlatList
-        data={categories}
-        contentContainerStyle={styles.list}
+        data={items}
+        contentContainerStyle={styles.listContent}
         renderItem={renderItem}
         ListHeaderComponent={() => <ItemBox />}
-        // showsVerticalScrollIndicator={false}
       />
       <View style={styles.footer}>
         <TouchableOpacity style={styles.applyBtn}>
@@ -78,7 +132,7 @@ const Filter = () => {
 export default Filter;
 
 const styles = StyleSheet.create({
-  itemContainer: {
+  itemView: {
     marginBottom: 16,
   },
   itemBtn: {
@@ -86,7 +140,8 @@ const styles = StyleSheet.create({
     backgroundColor: "#FFF",
     alignItems: "center",
     justifyContent: "space-between",
-    padding: 8,
+    paddingHorizontal: 8,
+    height: 50,
     gap: 10,
     borderColor: COLORS.grey,
     borderBottomWidth: 1,
@@ -108,14 +163,25 @@ const styles = StyleSheet.create({
     fontWeight: "700",
     marginBottom: 16,
   },
+  listItem: {
+    flexDirection: "row",
+    alignItems: "center",
+    padding: 10,
+    backgroundColor: COLORS.light,
+  },
+  listItemText: {
+    flex: 1,
+    fontSize: 15,
+    color: COLORS.mediumDark,
+  },
   container: {
     flex: 1,
-    // alignItems: "center",
     justifyContent: "center",
     backgroundColor: COLORS.lightGrey,
   },
-  list: {
+  listContent: {
     padding: 16,
+    paddingBottom: 100,
   },
   footer: {
     position: "absolute",
