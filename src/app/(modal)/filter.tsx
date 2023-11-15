@@ -5,13 +5,19 @@ import {
   TouchableOpacity,
   View,
   ListRenderItem,
-  Button,
+  useWindowDimensions,
 } from "react-native";
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import { COLORS } from "constants/Colors";
 import categories from "assets/data/filter.json";
-import { Ionicons } from "@expo/vector-icons";
 import BouncyCheckbox from "react-native-bouncy-checkbox";
+import ItemBox from "@comp/ItemBox";
+import Animated, {
+  useAnimatedStyle,
+  useSharedValue,
+  withTiming,
+} from "react-native-reanimated";
+import { router } from "expo-router";
 
 interface Categories {
   name: string;
@@ -19,55 +25,65 @@ interface Categories {
   checked?: boolean;
 }
 
-interface ItemBoxProp {
-  title: string;
-  icon: string;
-  subtitle?: string;
-}
-
-const ItemBox = () => {
-  const itemData: ItemBoxProp[] = [
-    { title: "Sort", subtitle: "Recommended", icon: "swap-vertical" },
-    { title: "Hygiene rating", icon: "fast-food-outline" },
-    { title: "Offers", icon: "pricetag-outline" },
-    { title: "Dietary", icon: "nutrition-outline" },
-  ];
-
-  return (
-    <>
-      <View style={styles.itemView}>
-        {itemData?.map((item, index) => (
-          <TouchableOpacity style={styles.itemBtn} key={index.toString()}>
-            <Ionicons
-              name={
-                index === 0
-                  ? "swap-vertical"
-                  : index === 1
-                  ? "fast-food-outline"
-                  : index === 2
-                  ? "pricetag-outline"
-                  : "nutrition-outline"
-              }
-              size={20}
-              color={COLORS.medium}
-            />
-            <View style={styles.itemTitleView}>
-              <Text style={styles.itemTitle}>{item.title}</Text>
-              {item.subtitle && (
-                <Text style={styles.itemSubtitle}>{item.subtitle}</Text>
-              )}
-            </View>
-            <Ionicons name="chevron-forward" size={20} color={COLORS.primary} />
-          </TouchableOpacity>
-        ))}
-      </View>
-      <Text style={styles.header}>Categories</Text>
-    </>
-  );
-};
+const AnimatedTouchable = Animated.createAnimatedComponent(TouchableOpacity);
 
 const Filter = () => {
   const [items, setItems] = useState<Categories[]>(categories);
+
+  const [selectedItems, setSelectedItems] = useState<Categories[]>([]);
+
+  const flexWidth = useSharedValue(0);
+
+  const scale = useSharedValue(0);
+
+  const marginRight = useSharedValue(0);
+
+  const animatedStyles = useAnimatedStyle(() => {
+    return {
+      width: flexWidth.value,
+      marginRight: marginRight.value,
+    };
+  });
+
+  const animatedOpacity = useAnimatedStyle(() => {
+    return {
+      // IMPORTANT NOTICE:
+      // Always add opacity animation in its separate animatedStyle or it will lead to bugs
+      // If you are adding more than one animated style to a component, make sure you add the opacity style first
+      // Adding opacity prop before the other props in the same animated style does not work
+
+      opacity: scale.value ? 1 : 0,
+    };
+  });
+
+  const animatedScale = useAnimatedStyle(() => {
+    return {
+      transform: [
+        {
+          scale: scale.value,
+        },
+      ],
+    };
+  });
+
+  useEffect(() => {
+    const wasSelected = selectedItems.length > 0; // Add this line
+
+    const anyCheckboxChecked = items.some((item) => item.checked);
+
+    if (!anyCheckboxChecked) {
+      flexWidth.value = withTiming(0, { duration: 50 });
+      scale.value = withTiming(0, { duration: 50 });
+      marginRight.value = withTiming(0, { duration: 50 });
+    } else if (!wasSelected) {
+      // Only set values when the first checkbox is checked
+      flexWidth.value = withTiming(150, { duration: 100 });
+      scale.value = withTiming(1, { duration: 100 });
+      marginRight.value = withTiming(12, { duration: 100 });
+    }
+
+    setSelectedItems(items.filter((item) => item.checked));
+  }, [items]);
 
   const toggleCheck = (name: string) => {
     setItems((prevItems) =>
@@ -113,7 +129,6 @@ const Filter = () => {
   );
   return (
     <View style={styles.container}>
-      <Button title="Clear All" onPress={handleClearAll} />
       <FlatList
         data={items}
         contentContainerStyle={styles.listContent}
@@ -121,9 +136,29 @@ const Filter = () => {
         ListHeaderComponent={() => <ItemBox />}
       />
       <View style={styles.footer}>
-        <TouchableOpacity style={styles.applyBtn}>
-          <Text style={styles.footerText}>Done</Text>
-        </TouchableOpacity>
+        <View style={styles.btnContainer}>
+          {/* <View style={{ backgroundColor: "red" }}> */}
+          <AnimatedTouchable
+            style={[styles.outlineBtn, animatedOpacity, animatedStyles]}
+            onPress={handleClearAll}
+          >
+            <Animated.Text
+              style={[styles.outlineText, animatedScale]}
+              numberOfLines={1}
+            >
+              Clear all
+            </Animated.Text>
+          </AnimatedTouchable>
+          {/* </View> */}
+          <TouchableOpacity
+            style={styles.applyBtn}
+            onPress={() => router.back()}
+          >
+            <Text style={styles.footerText} numberOfLines={1}>
+              Done
+            </Text>
+          </TouchableOpacity>
+        </View>
       </View>
     </View>
   );
@@ -132,37 +167,6 @@ const Filter = () => {
 export default Filter;
 
 const styles = StyleSheet.create({
-  itemView: {
-    marginBottom: 16,
-  },
-  itemBtn: {
-    flexDirection: "row",
-    backgroundColor: "#FFF",
-    alignItems: "center",
-    justifyContent: "space-between",
-    paddingHorizontal: 8,
-    height: 50,
-    gap: 10,
-    borderColor: COLORS.grey,
-    borderBottomWidth: 1,
-  },
-  iconView: {
-    flexDirection: "row",
-    gap: -9,
-  },
-  itemTitleView: {
-    flex: 1,
-  },
-  itemTitle: {
-    fontSize: 16,
-    fontWeight: "400",
-  },
-  itemSubtitle: {},
-  header: {
-    fontSize: 16,
-    fontWeight: "700",
-    marginBottom: 16,
-  },
   listItem: {
     flexDirection: "row",
     alignItems: "center",
@@ -192,13 +196,36 @@ const styles = StyleSheet.create({
     height: 100,
     elevation: 30,
   },
-  applyBtn: {
+  btnContainer: {
+    flexDirection: "row",
+    justifyContent: "center",
+    alignItems: "flex-start",
+    // gap: 12,
+    paddingHorizontal: 16,
+  },
+  outlineBtn: {
     alignItems: "center",
-    backgroundColor: COLORS.primary,
-    paddingVertical: 16,
+    justifyContent: "center",
+    backgroundColor: COLORS.light,
     marginTop: 10,
-    marginHorizontal: 16,
-    borderRadius: 4,
+    height: 56,
+    borderWidth: 0.5,
+    borderColor: COLORS.primary,
+    borderRadius: 8,
+  },
+  outlineText: {
+    color: COLORS.primary,
+    fontWeight: "700",
+    fontSize: 16,
+  },
+  applyBtn: {
+    flex: 1,
+    alignItems: "center",
+    justifyContent: "center",
+    backgroundColor: COLORS.primary,
+    marginTop: 10,
+    height: 56,
+    borderRadius: 8,
   },
   footerText: {
     color: COLORS.light,
